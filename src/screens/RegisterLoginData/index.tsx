@@ -36,7 +36,9 @@ export function RegisterLoginData() {
     formState: {
       errors
     }
-  } = useForm();
+  } = useForm({
+    resolver: yupResolver(schema)
+  });
 
   async function handleRegister(formData: FormData) {
     const newLoginData = {
@@ -44,7 +46,21 @@ export function RegisterLoginData() {
       ...formData
     }
 
-    // Save data on AsyncStorage
+    try {
+      const logins = await AsyncStorage.getItem('@passmanager:logins')
+
+      const updatedLogins = logins
+        ? [...JSON.parse(logins), newLoginData]
+        : [newLoginData]
+
+      await AsyncStorage.setItem('@passmanager:logins', JSON.stringify(updatedLogins))
+
+      reset()
+    } catch(err) {
+      console.error(err)
+
+      Alert.alert('Could not register a new login')
+    }
   }
 
   return (
@@ -61,7 +77,7 @@ export function RegisterLoginData() {
             title="Título"
             name="title"
             error={
-              // message error here
+              errors.title?.message
             }
             control={control}
             placeholder="Escreva o título aqui"
@@ -72,7 +88,7 @@ export function RegisterLoginData() {
             title="Email"
             name="email"
             error={
-              // message error here
+              errors.email?.message
             }
             control={control}
             placeholder="Escreva o Email aqui"
@@ -84,7 +100,7 @@ export function RegisterLoginData() {
             title="Senha"
             name="password"
             error={
-              // message error here
+              errors.password?.message
             }
             control={control}
             secureTextEntry
